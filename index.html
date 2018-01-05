@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Karaoke</title>
+
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.css" type="text/css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+	<link rel="stylesheet" href="css/style.css">
+
+	<script>
+		function videoInfo(url) {
+			url = url.replace("watch?v=", "embed/") + "?rel=0";
+			$.get('https://cors-anywhere.herokuapp.com/' + url, {}, function(response) {
+				var title = response.match(/<title>.*<\/title>/);
+				title = title[0].replace(" (Karaoke Version)", "").replace(" - YouTube", "").replace("<title>", "").replace("</title>", "").replace(/&#39;/g, "'");
+				var split = title.split(" - ");
+				var artist = split[0];
+				var name = split[1];
+				if(name && artist && url) {
+					var song = {name: name + " - " + artist, url: url};
+					updateDB(song, true);
+				}
+			});
+		}
+
+		function filter() {
+			var input = document.getElementById("search");
+			var filter = input.value.toLowerCase();
+			var ul = document.getElementById("entries");
+			var li = ul.getElementsByTagName("li");
+
+			for(var i=0; i<li.length; i++) {
+				if(li[i].innerHTML.toLowerCase().indexOf(filter) > -1) li[i].style.display = "";
+				else li[i].style.display = "none";
+			}
+		}
+
+		var db;
+		var objectStore;
+		var success = false;
+		function openDB() {
+			var request = indexedDB.open("Songs");
+			request.onerror = function(event) {
+				alert("Database error: " + event.target.errorCode);
+			};
+			request.onsuccess = function(event) {
+				db = event.target.result;
+				success = true;
+				console.log("db successfully opened!");
+
+				// to delete bad keys
+				var song = {name: "How Far I&#39;ll Go - Auli'i Cravalho", url: 'asdf'};
+				updateDB(song, false);
+
+				getDBEntries();
+			};
+			request.onupgradeneeded = function(event) {
+				db = event.target.result;
+				objectStore = db.createObjectStore("songs", {keyPath: "name"});
+				objectStore.transaction.oncomplete = function(event) {
+					success = true;
+					alert("db created!");
+				};
+			};
+		}
+
+		function updateDB(song, add) {
+			if(success) {
+				var transaction = db.transaction(["songs"], "readwrite");
+				
+				transaction.oncomplete = function(event) {
+					// alert("transaction completed!");
+				};
+				transaction.onerror = function(event) {
+					alert("transaction error");
+				};
+
+				objectStore = transaction.objectStore("songs");
+				if(add) {
+					var request = objectStore.put(song);
+					request.onsuccess = function(event) {
+						if(event.target.result === song.name){
+							$("ul").empty();
+							getDBEntries();
+							alert(event.target.result + " added!");
+						}
+					};
+				} else {
+					var request = objectStore.delete(song.name);
+					request.onsuccess = function(event) {
+						alert(song.name + " deleted!");
+					};
+				}
+			}
+		}
+
+		function getDBEntries() {
+			if(success) {
+				var transaction = db.transaction(["songs"]);
+				objectStore = transaction.objectStore("songs");
+				objectStore.openCursor().onsuccess = function(event) {
+					var cursor = event.target.result;
+					if(cursor) {
+						$("ul").append('<a href="#"><li id="' + cursor.key + '">' + cursor.key + '</li></a>');
+						cursor.continue();
+					} else {
+						console.log("finished getting entries!");
+					}
+				}
+			}
+		}
+
+		function getEntry(id) {
+			if(success) {
+				var transaction = db.transaction(["songs"]);
+				objectStore = transaction.objectStore("songs");
+				var request = objectStore.get(id);
+				request.onerror = function(error) {
+					alert("Error getting " + id);
+				};
+				request.onsuccess = function(error) {
+					$("iframe").attr("src", request.result.url);
+					console.log("url loaded");
+				}
+			}
+		}
+
+		openDB();
+		$(document).ready(function() {
+			$("ul").on('click', 'a', function(event) {
+				var el = event.target.id;
+				getEntry(el);
+			});
+			$("input").keypress(function(event) {
+				if(event.which == 13 && $(this).val().length > 0) {
+					videoInfo($(this).val());
+				}
+			});
+		});
+	</script>
+</head>
+<body>
+	<div class="row">
+		<div class="col-xs-3">
+			<input type="text" id="search" placeholder="Search..." onkeyup="filter()">
+			<ul id="entries">
+			</ul>
+		</div>
+		<div class="col-xs-9">
+			<div class="video-wrapper">
+			<iframe src="" frameborder="0" gesture="media" allow="encrypted-media" allowfullscreen></iframe>
+			</div>
+			<div class="well" id="queue">
+				<h2>Queued:</h2>
+				<div class="row">
+					<div class="col-xs-6">
+						<h4>Next:</h4>
+					</div>
+					<div class="col-xs-6">
+						<h4>After:</h4>
+						<input type="text" class="form-control drop-down-toggle" placeholder="Add song...">
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
