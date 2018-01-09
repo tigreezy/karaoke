@@ -12,7 +12,71 @@
 	<link rel="stylesheet" href="css/style.css">
 
 	<script>
+		var XT = XT || {};
 
+		window.onYouTubeIframeAPIReady = function(){
+		    setTimeout(XT.yt.onYouTubeIframeAPIReady,500);
+		}
+
+		XT.yt = {
+
+			/* load the YouTube API first */
+			loadApi: function () {
+
+			        var tag = document.createElement("script"),
+			            firstScriptTag = document.getElementsByTagName("script")[0];
+			        tag.src = "//www.youtube.com/iframe_api";
+			        tag.async = true;
+			        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+			        console.log('API Loaded');
+			    },
+
+			/*default youtube api listener*/
+			onYouTubeIframeAPIReady: function () {
+			    console.log('API Ready?');
+			    window.YT = window.YT || {};
+			    if (typeof window.YT.Player === 'function') {
+			        player = new window.YT.Player('player', {
+			            videoId: 'Jn_IIOyTr_A',
+			            events: {
+			                'onStateChange': XT.yt.onPlayerStateChange,
+			                'onError': XT.yt.onPlayerError,
+			                'onReady': setTimeout(XT.yt.onPlayerReady, 2000)
+			            }
+			        });
+			    }
+			},
+
+
+			onPlayerReady: function() {
+			    // player.playVideo(); /* start the video */
+			    player.setVolume(100); /* set volume to 1 (accepts 0-100) */
+			},
+
+			onPlayerStateChange: function (e) {
+			    console.log(e.data, YT.PlayerState.PLAYING, e.data === YT.PlayerState.PLAYING);
+			    var video_data = e.target.getVideoData();
+
+			    //do something on video ends
+			    if(e.data === YT.PlayerState.ENDED) XT.yt.onPlayerStop();
+			},
+
+			onPlayerStop: function(){
+			    console.log('video ended');
+			    playNextSong();
+			},
+
+			onPlayerError: function (e) {
+			    console.log( "youtube: " + e.target.src + " - " + e.data);
+			},
+
+			init: function () {
+			    this.loadApi();
+			}
+
+		}
+
+		XT.yt.init();
 
 		function videoInfo(url) {
 			url = url.replace("watch?v=", "embed/") + "?rel=0";
@@ -125,12 +189,27 @@
 					alert("Error getting " + id);
 				};
 				request.onsuccess = function(error) {
-					if($("iframe").attr("src") != request.result.url) {
-						$("iframe").attr("src", request.result.url);
-						console.log("url loaded");
-					}
+					// if($("iframe").attr("src") != request.result.url) {
+					// 	$("iframe").attr("src", request.result.url);
+					// 	console.log("url loaded");
+					// }
+					player.loadVideoByUrl(request.result.url, 0, "large");
 				}
 			}
+		}
+
+		var queue = [];
+		function playNextSong() {
+			var song = queue.shift();
+			if(song != null) getEntry(song);
+		}
+
+		function addQueue(song) {
+			queue.push(song);
+		}
+
+		function addNext(song) {
+			queue.unshift(song);
 		}
 
 		openDB();
@@ -138,6 +217,11 @@
 			$("ul").on('click', 'a', function(event) {
 				var el = event.target.id;
 				getEntry(el);
+			});
+			$("ul").on('click', 'button', function(event) {
+				var el = event.target.parentElement.id;
+				addQueue(el);
+				// alert('added to queue');
 			});
 			$("input").keypress(function(event) {
 				if(event.which == 13 && $(this).val().length > 0) {
@@ -156,7 +240,10 @@
 		</div>
 		<div class="col-xs-8">
 			<div id="video-wrapper">
-			<iframe src="" frameborder="0" gesture="media" allow="encrypted-media" allowfullscreen></iframe>
+				<div id="player">
+					<script src="https://www.youtube.com/iframe_api"></script>
+				<!-- <iframe src="" frameborder="0" gesture="media" allow="encrypted-media" allowfullscreen></iframe> -->
+				</div>
 			</div>
 			<div class="well" id="queue">
 				<h2>Queued:</h2>
@@ -166,7 +253,7 @@
 					</div>
 					<div class="col-xs-6">
 						<h4>After:</h4>
-						<input type="text" class="form-control drop-down-toggle" placeholder="Add song...">
+						<!-- <input type="text" class="form-control drop-down-toggle" placeholder="Add song..."> -->
 					</div>
 				</div>
 			</div>
