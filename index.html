@@ -180,6 +180,7 @@
 			}
 		}
 
+		var currSong;
 		function getEntry(id) {
 			if(success) {
 				var transaction = db.transaction(["songs"]);
@@ -194,6 +195,8 @@
 					// 	console.log("url loaded");
 					// }
 					player.loadVideoByUrl(request.result.url, 0, "large");
+					currSong = id;
+					updateQueueInfo();
 				}
 			}
 		}
@@ -206,10 +209,23 @@
 
 		function addQueue(song) {
 			queue.push(song);
+			if(player.getPlayerState() === YT.PlayerState.ENDED && queue.length > 0) playNextSong();
 		}
 
 		function addNext(song) {
 			queue.unshift(song);
+		}
+
+		function updateQueueInfo() {
+			$("#current-song").text(currSong);
+			var i = 0;
+			$("ol").children().each(function() {
+				if(queue[i] != null) {
+					$(this).text(queue[i]);
+					$(this).show();
+				} else $(this).hide();
+				i++;
+			});
 		}
 
 		openDB();
@@ -221,13 +237,14 @@
 			$("ul").on('click', 'button', function(event) {
 				var el = event.target.parentElement.id;
 				addQueue(el);
-				// alert('added to queue');
+				alert('Added ' + el + ' to queue');
 			});
 			$("input").keypress(function(event) {
 				if(event.which == 13 && $(this).val().length > 0) {
 					videoInfo($(this).val());
 				}
 			});
+			$("ol").children().hide();
 		});
 	</script>
 </head>
@@ -246,13 +263,20 @@
 				</div>
 			</div>
 			<div class="well" id="queue">
-				<h2>Queued:</h2>
 				<div class="row">
 					<div class="col-xs-6">
-						<h4>Next:</h4>
+						<h4>Song Playing:</h4>
+						<p id="current-song"></p>
 					</div>
 					<div class="col-xs-6">
-						<h4>After:</h4>
+						<h4>Queued:</h4>
+						<ol>
+							<li></li>
+							<li></li>
+							<li></li>
+							<li></li>
+							<li></li>
+						</ol>
 						<!-- <input type="text" class="form-control drop-down-toggle" placeholder="Add song..."> -->
 					</div>
 				</div>

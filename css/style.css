@@ -89,3 +89,20 @@ a li:hover {
 	text-decoration: none;
 	cursor: default;
 }
+
+#current-song {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.col-xs-6 {
+	padding-right: 5%;
+}
+
+ol {
+	padding-left: 15px;
+	/*overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;*/
+}
