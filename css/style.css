@@ -64,6 +64,10 @@ button {
 	border: none;
 }
 
+button:focus {
+	outline: none;
+}
+
 a, a:hover, a:focus, a:visited {
 	text-decoration: none;
 	color: default;
@@ -82,9 +86,11 @@ a li {
 	/*text-overflow: ellipsis;*/
 	/*white-space: nowrap;*/
 }
-
+/**/
 a li:hover {
-	opacity: 0.6;
+	/*opacity: 0.6;*/
+	background: rgba(255,255,255,0.6);
+	color: rgba(0,0,0,0.6);
 	border-left: 2px solid black;
 	text-decoration: none;
 	cursor: default;
@@ -105,4 +111,35 @@ ol {
 	/*overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;*/
+}
+
+p {
+	margin: 0;
+	pointer-events: initial;
+}
+
+p:hover {
+	background: rgba(255,255,255,0.1);
+	opacity: 0.9;
+	cursor: pointer;
+}
+
+.popuptext {
+    visibility: hidden;
+    width: 100px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px 0;
+    position: absolute;
+    z-index: 1;
+    right: 10%;
+    /*bottom: 125%;*/
+    /*left: 10%;*/
+    /*margin-left: -80px;*/
+}
+
+.popup .show {
+    visibility: visible;
 }

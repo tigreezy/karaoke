@@ -171,7 +171,7 @@
 				objectStore.openCursor().onsuccess = function(event) {
 					var cursor = event.target.result;
 					if(cursor) {
-						$("ul").append('<a href="#"><li id="' + cursor.key + '"><span>' + cursor.key + '</span><button>&bull;&bull;&bull;</button></li></a>');
+						$("ul").append('<a href="#"><li id="' + cursor.key + '"><span>' + cursor.key + '</span><button>&bull;&bull;&bull;</button><div class="popup"><span class="popuptext"><p id="queueButton">Queue</p><p id="playNext">Play next</p></span></div></li></a>');
 						cursor.continue();
 					} else {
 						console.log("finished getting entries!");
@@ -210,10 +210,13 @@
 		function addQueue(song) {
 			queue.push(song);
 			if(player.getPlayerState() === YT.PlayerState.ENDED && queue.length > 0) playNextSong();
+			updateQueueInfo();
 		}
 
 		function addNext(song) {
 			queue.unshift(song);
+			if(player.getPlayerState() === YT.PlayerState.ENDED && queue.length > 0) playNextSong();
+			updateQueueInfo();
 		}
 
 		function updateQueueInfo() {
@@ -228,16 +231,23 @@
 			});
 		}
 
+		function togglePopup(popup) {
+			popup.classList.toggle("show");
+		}
+
 		openDB();
 		$(document).ready(function() {
-			$("ul").on('click', 'a', function(event) {
+			$("ul").on('dblclick', 'a', function(event) {
 				var el = event.target.id;
 				getEntry(el);
 			});
 			$("ul").on('click', 'button', function(event) {
-				var el = event.target.parentElement.id;
-				addQueue(el);
-				alert('Added ' + el + ' to queue');
+				var popup = event.target.nextSibling.firstElementChild;
+				togglePopup(popup);
+			});
+			$("ul").on('focusout', 'button', function(event) {
+				var popup = event.target.nextSibling.firstElementChild;
+				setTimeout(function() {togglePopup(popup)}, 100);
 			});
 			$("input").keypress(function(event) {
 				if(event.which == 13 && $(this).val().length > 0) {
@@ -245,6 +255,16 @@
 				}
 			});
 			$("ol").children().hide();
+			$("ul").on('click', '#queueButton', function(event) {
+				var el = event.target.parentElement.parentElement.parentElement.id;
+				addQueue(el);
+				// alert('Added ' + el + ' to queue');
+			});
+			$("ul").on('click', '#playNext', function(event) {
+				var el = event.target.parentElement.parentElement.parentElement.id;
+				addNext(el);
+				// alert('Will play ' + el + ' next');
+			});
 		});
 	</script>
 </head>
@@ -267,6 +287,8 @@
 					<div class="col-xs-6">
 						<h4>Song Playing:</h4>
 						<p id="current-song"></p>
+						<!-- <div class="popup" onclick="myFunction()">Click me to toggle the popup!<span class="popuptext" id="myPopup">A simple popup!</span>
+						</div> -->
 					</div>
 					<div class="col-xs-6">
 						<h4>Queued:</h4>
