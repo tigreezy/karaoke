@@ -51,6 +51,7 @@
 			onPlayerReady: function() {
 			    // player.playVideo(); /* start the video */
 			    player.setVolume(100); /* set volume to 1 (accepts 0-100) */
+			    setQueueHeight();
 			},
 
 			onPlayerStateChange: function (e) {
@@ -235,6 +236,13 @@
 			popup.classList.toggle("show");
 		}
 
+		function setQueueHeight() {
+			var windowHeight = $(window).height();
+			var videoHeight = $("iframe").height();
+			var queueHeight = windowHeight - videoHeight;
+			$("#queue").css("height", queueHeight);
+		}
+
 		openDB();
 		$(document).ready(function() {
 			$("ul").on('dblclick', 'a', function(event) {
@@ -285,13 +293,11 @@
 			<div class="well" id="queue">
 				<div class="row">
 					<div class="col-xs-6">
-						<h4>Song Playing:</h4>
+						<h3>Song Playing:</h3>
 						<p id="current-song"></p>
-						<!-- <div class="popup" onclick="myFunction()">Click me to toggle the popup!<span class="popuptext" id="myPopup">A simple popup!</span>
-						</div> -->
 					</div>
 					<div class="col-xs-6">
-						<h4>Queued:</h4>
+						<h3>Queued:</h3>
 						<ol>
 							<li></li>
 							<li></li>
