@@ -83,14 +83,16 @@
 			url = url.replace("watch?v=", "embed/") + "?rel=0";
 			$.get('https://cors-anywhere.herokuapp.com/' + url, {}, function(response) {
 				var title = response.match(/<title>.*<\/title>/);
-				title = title[0].replace(" (Karaoke Version)", "").replace(" - YouTube", "").replace("<title>", "").replace("</title>", "").replace(/&#39;/g, "'");
-				var split = title.split(" - ");
-				var artist = split[0];
-				var name = split[1];
-				if(name && artist && url) {
-					var song = {name: name + " - " + artist, url: url};
-					updateDB(song, true);
-				}
+				if(title[0] && title[0].includes('-') && title[0].includes('(Karaoke Version)')) {
+					title = title[0].replace(" (Karaoke Version)", "").replace(" - YouTube", "").replace("<title>", "").replace("</title>", "").replace(/&#39;/g, "'").replace(/&amp;/g, "&");
+					var split = title.split(" - ");
+					var artist = split[0];
+					var name = split[1];
+					if(name && artist && url) {
+						var song = {name: name + " - " + artist, url: url};
+						updateDB(song, true);
+					}
+				} else alert('invalid video url');
 			});
 		}
 
@@ -120,7 +122,7 @@
 				console.log("db successfully opened!");
 
 				// to delete bad keys
-				// var song = {name: "How Far I&#39;ll Go - Auli'i Cravalho", url: 'asdf'};
+				// var song = {name: "Beauty &amp; The Beast - Ariana Grande, John Legend", url: 'asdf'};
 				// updateDB(song, false);
 
 				getDBEntries();
@@ -257,11 +259,14 @@
 				var popup = event.target.nextSibling.firstElementChild;
 				setTimeout(function() {togglePopup(popup)}, 100);
 			});
-			$("input").keypress(function(event) {
-				if(event.which == 13 && $(this).val().length > 0) {
-					videoInfo($(this).val());
-				}
-			});
+
+			// For adding songs
+			// $("input").keypress(function(event) {
+			// 	if(event.which == 13 && $(this).val().length > 0) {
+			// 		videoInfo($(this).val());
+			// 		$(this).val("");
+			// 	}
+			// });
 			$("ol").children().hide();
 			$("ul").on('click', '#queueButton', function(event) {
 				var el = event.target.parentElement.parentElement.parentElement.id;
@@ -277,6 +282,7 @@
 	</script>
 </head>
 <body>
+	<!-- <h1 class="text-center">Karaoke</h1> -->
 	<div class="row">
 		<div class="col-xs-4">
 			<input type="text" id="search" placeholder="Search..." onkeyup="filter()">
@@ -287,7 +293,6 @@
 			<div id="video-wrapper">
 				<div id="player">
 					<script src="https://www.youtube.com/iframe_api"></script>
-				<!-- <iframe src="" frameborder="0" gesture="media" allow="encrypted-media" allowfullscreen></iframe> -->
 				</div>
 			</div>
 			<div class="well" id="queue">
