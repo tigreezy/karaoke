@@ -79,6 +79,14 @@
 
 		XT.yt.init();
 
+		function checkVideoTime() {
+			if(player.getCurrentTime() < player.getDuration() - 10) {
+				setTimeout(checkVideoTime, 1000);
+			} else {
+				player.seekTo(player.getDuration(), true);
+			}
+		}
+
 		function videoInfo(url) {
 			url = url.replace("watch?v=", "embed/") + "?rel=0";
 			$.get('https://cors-anywhere.herokuapp.com/' + url, {}, function(response) {
@@ -197,9 +205,10 @@
 					// 	$("iframe").attr("src", request.result.url);
 					// 	console.log("url loaded");
 					// }
-					player.loadVideoByUrl(request.result.url, 0, "large");
+					player.loadVideoByUrl(request.result.url, 7, "large");
 					currSong = id;
 					updateQueueInfo();
+					setTimeout(checkVideoTime, 10000);
 				}
 			}
 		}
@@ -238,6 +247,10 @@
 			popup.classList.toggle("show");
 		}
 
+		function dismissPopup(popup) {
+			$(popup).removeClass("show");
+		}
+
 		function setQueueHeight() {
 			var windowHeight = $(window).height();
 			var videoHeight = $("iframe").height();
@@ -257,7 +270,7 @@
 			});
 			$("ul").on('focusout', 'button', function(event) {
 				var popup = event.target.nextSibling.firstElementChild;
-				setTimeout(function() {togglePopup(popup)}, 100);
+				setTimeout(function() {dismissPopup(popup)}, 100);
 			});
 
 			// For adding songs
